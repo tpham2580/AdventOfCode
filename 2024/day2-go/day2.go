@@ -1,89 +1,131 @@
 package main
 
 import (
+	"aoc-go-2024/internal/logger"
 	"bufio"
+	"flag"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
 )
 
-func main() {
-	// Both below need to be met to be considered safe:
-	// The levels are either all increasing or all decreasing
-	// Any two adjacent levels differ by at least one and at most three.
+// Service struct contains logger
+type Service struct {
+	logger *logger.Logger
+}
 
-	file, err := os.Open("day2input.txt")
+func abs(num int) int {
+	if num > 0 {
+		return num
+	} else {
+		return -num
+	}
+}
+
+func (s *Service) readReports(fileName string) [][]int {
+	file, err := os.Open(fileName)
 	if err != nil {
-		log.Fatal(err)
+		s.logger.Error(err.Error())
 	}
 	defer file.Close()
 
+	var reports = [][]int{}
 	scanner := bufio.NewScanner(file)
-	// Go through the file line by line
-	var safeCount int = 0
-
 	for scanner.Scan() {
 		line := scanner.Text()
-		fmt.Println(line)
-		strArr := strings.Fields(line)
-		intArr := make([]int, len(strArr))
-
-		for i, s := range strArr {
-			intArr[i], err = strconv.Atoi(s)
+		fields := strings.Fields(line)
+		var report []int
+		for _, field := range fields {
+			num, err := strconv.Atoi(field)
 			if err != nil {
-				fmt.Printf("Issue with converting %d\n", s)
+				s.logger.Error(err.Error())
 			}
+			report = append(report, num)
 		}
+		reports = append(reports, report)
+	}
 
-		var isIncreasing bool = false
-		var isDecreasing bool = false
-		var useDampener int = 0
-		for i := 1; i < len(intArr); i++ {
+	return reports
+}
 
-			diff := intArr[i] - intArr[i-1]
-			if diff >= 0 {
-				if isDecreasing {
-					useDampener++
-					continue
-				} else if diff < 1 || diff > 3 {
-					useDampener++
-				}
-				isIncreasing = true
-			} else {
-				if isIncreasing {
-					useDampener++
-					continue
-				} else if -diff < 1 || -diff > 3 {
-					useDampener++
-				}
-				isDecreasing = true
-			}
+func (s *Service) isSafe(report []int) bool {
+	var increasing bool = true
+	var decreasing bool = true
 
-			if isIncreasing && isDecreasing {
-				break
-			}
+	for i := 0; i < len(report)-1; i++ {
+		var diff int = report[i+1] - report[i]
 
-			if useDampener > 1 {
-				break
-			}
+		if abs(diff) < 1 || abs(diff) > 3 {
+			return false
 		}
+		if diff < 0 {
+			increasing = false
+		}
+		if diff > 0 {
+			decreasing = false
+		}
+	}
 
-		if useDampener <= 1 {
-			if isIncreasing && isDecreasing {
-				continue
-			} else if isIncreasing || isDecreasing {
-				safeCount++
+	return increasing || decreasing
+}
+
+func (s *Service) countSafeReportsWithDampener(reports [][]int) int {
+	var safeCount int = 0
+
+	for _, report := range reports {
+		if s.isSafe(report) {
+			safeCount++
+		} else {
+			for index := 0; index < len(report); index++ {
+				leftPart := append([]int{}, report[:index]...)
+				rightPart := append([]int{}, report[index+1:]...)
+				modifiedReport := append(leftPart, rightPart...)
+				if s.isSafe(modifiedReport) {
+					safeCount++
+					break
+				}
 			}
 		}
 	}
 
-	fmt.Printf("The number of safe levels is %d\n", safeCount)
-	// Seperate all values and convert them all to int
-	// Go through the whole list, and check if increasing each time
-	// and also check if the difference between each step is between 1 to 3
-	// If we get to the end, increment the safe counter
+	return safeCount
+}
 
-	// return the safe counter
+func (s *Service) countSafeReports(reports [][]int) int {
+	var safeCount int = 0
+
+	for _, report := range reports {
+		isSafeReport := s.isSafe(report)
+		if isSafeReport {
+			safeCount++
+		}
+	}
+
+	return safeCount
+}
+
+func main() {
+	logger := logger.NewLogger()
+	s := &Service{
+		logger: logger,
+	}
+
+	// Flags
+	useDampener := flag.Bool("dampener", false, "Use dampener to calculate safe reports")
+	flag.Parse()
+
+	fileInput := "day2input.txt"
+	reports := s.readReports(fileInput)
+
+	var safeCount int
+	if *useDampener {
+		s.logger.Info("Calculating safe reports with dampener...")
+		safeCount = s.countSafeReportsWithDampener(reports)
+	} else {
+		s.logger.Info("Calculating safe reports without dampener...")
+		safeCount = s.countSafeReports(reports)
+	}
+
+	s.logger.Info(fmt.Sprintf("Safe count: %v", safeCount))
 }
