@@ -35,7 +35,7 @@ func (s *Service) getStringArray(fileName string) []string {
 	return arrStrings
 }
 
-// Uses dfs to search for word in board. Returns count of word.
+// Uses dfs to search in 8 directions for word in board. Returns count of word.
 func (s *Service) getWordCount(board []string, word string) int {
 	var ROWS int = len(board)
 	var COLS int = len(board[0])
