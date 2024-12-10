@@ -36,6 +36,12 @@ func (l *Logger) InfoBool(b bool) {
 	l.infoLogger.Output(2, message)
 }
 
+func (l *Logger) InfoStrings(strings []string) {
+	message := fmt.Sprintf("%v", strings)
+	l.infoLogger.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	l.infoLogger.Output(2, message)
+}
+
 func (l *Logger) Error(message string) {
 	l.errorLogger.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	l.errorLogger.Output(2, message)
