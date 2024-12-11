@@ -84,6 +84,7 @@ func (s *Service) getWordCount(board []string, word string) int {
 	return count
 }
 
+// Goes through M*N board of strings and looks for A and then checks if it is a valid X-MAS
 func (s *Service) getXmasCount(board []string) int {
 	var ROWS int = len(board)
 	var COLS int = len(board[0])
