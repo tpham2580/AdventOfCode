@@ -3,6 +3,7 @@ package main
 import (
 	"aoc-go-2024/internal/logger"
 	"bufio"
+	"flag"
 	"os"
 	"strconv"
 )
@@ -48,6 +49,8 @@ func (s *Service) getWordCount(board []string, word string) int {
 		mutBoard[i] = []rune(board[i])
 	}
 
+	s.logger.Info("Searching for " + word)
+
 	// Checks to see if the points are valid and if the next character is the next word[index]
 	isValid := func(row, col, index int) bool {
 		return (0 <= row && row < ROWS) && (0 <= col && col < COLS) && mutBoard[row][col] == rune(word[index])
@@ -63,9 +66,7 @@ func (s *Service) getWordCount(board []string, word string) int {
 		if isValid(row, col, index) {
 			temp := mutBoard[row][col]
 			mutBoard[row][col] = '#'
-
 			findWord(row+direction.X, col+direction.Y, index+1, direction)
-
 			mutBoard[row][col] = temp
 		}
 	}
@@ -83,13 +84,59 @@ func (s *Service) getWordCount(board []string, word string) int {
 	return count
 }
 
+func (s *Service) getXmasCount(board []string) int {
+	var ROWS int = len(board)
+	var COLS int = len(board[0])
+	var count int = 0
+	const A = 'A'
+
+	s.logger.Info("Searching for X-MAS")
+
+	var isValidXmas func(row, col int) bool
+	isValidXmas = func(row, col int) bool {
+		topLeft, topRight, botLeft, botRight := board[row-1][col-1], board[row+1][col-1], board[row-1][col+1], board[row+1][col+1]
+
+		if (topLeft == 'M' && botRight == 'S') || (topLeft == 'S' && botRight == 'M') {
+			if (topRight == 'M' && botLeft == 'S') || (topRight == 'S' && botLeft == 'M') {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	// go through entire board and look search for word at each point
+	for row := 1; row < ROWS-1; row++ {
+		for col := 1; col < COLS-1; col++ {
+			if board[row][col] == A {
+				if isValidXmas(row, col) {
+					count++
+				}
+			}
+		}
+	}
+
+	return count
+}
+
 func main() {
 	s := &Service{
 		logger: logger.NewLogger(),
 	}
 
-	fileName := "day4input.txt"
-	arrStrings := s.getStringArray(fileName)
-	wordCount := s.getWordCount(arrStrings, "XMAS")
-	s.logger.Info(strconv.Itoa(wordCount))
+	// Flags part2
+	xmas := flag.Bool("part2", false, "Checks for number of X-MAS instead because the elf couldn't explain the first time")
+	word := flag.String("word", "XMAS", "Pass in word that will be searched from input text file")
+	file := flag.String("file", "day4input.txt", "Pass in file name to read from file")
+	flag.Parse()
+
+	arrStrings := s.getStringArray(*file)
+
+	var count int
+	if *xmas {
+		count = s.getXmasCount(arrStrings)
+	} else {
+		count = s.getWordCount(arrStrings, *word)
+	}
+	s.logger.Info(strconv.Itoa(count))
 }
