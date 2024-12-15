@@ -5,21 +5,22 @@ import (
 	"testing"
 )
 
-func TestMain(m *testing.M) {
-	testFile := "day5input_test.txt"
+func TestParts(t *testing.T) {
+	testFile := "../../../../inputs/year2024/day5input_test.txt"
 
 	s := &Service{
-		logger.NewLogger(),
+		log: logger.NewLogger(),
 	}
 
-	testLine, err := s.readFile(testFile)
-	if err != nil {
-		s.log.Error(err)
-	}
+	aadj, arrInt := s.readFile(testFile)
 
-	m.Run()
-}
+	t.Run("Part I", func(t *testing.T) {
+		got := 142
+		want := 143
 
-func TestPart1(t *testing.T) {
+		if got != want {
+			t.Errorf("got %d but want %d", got, want)
+		}
+	})
 
 }
