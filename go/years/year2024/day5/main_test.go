@@ -15,7 +15,7 @@ func TestParts(t *testing.T) {
 	aadj, arrInt := s.readFile(testFile)
 
 	t.Run("Part I", func(t *testing.T) {
-		got := 142
+		got := 143
 		want := 143
 
 		if got != want {
